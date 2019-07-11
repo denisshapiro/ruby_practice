@@ -1,3 +1,7 @@
+# gem install colorize
+# gem install win32console  # if on Windows
+require 'colorize'
+
 # Class to create board
 class Board
   attr_accessor :board_arr
@@ -6,19 +10,25 @@ class Board
     @board_arr = (1..9).to_a
   end
 
-  def access_data(arr, row, col)
-    arr[row * 3 + col]
+  def color(mark)
+    return mark.green if mark == 'X'
+
+    return mark.red if mark == 'O'
+
+    mark
   end
 
   def draw_board(arr = @board_arr)
     puts "\n"
     arr.each_with_index do |elem, index|
       if [1, 4, 7].include? index
-        print "| #{elem} |"
-      elsif [2, 5, 8].include? index
-        puts " #{elem} \n---+---+---"
+        print "| #{color(elem)} |"
+      elsif [2, 5].include? index
+        puts " #{color(elem)} \n---+---+---"
+      elsif index == 8
+        puts " #{color(elem)} \n"
       else
-        print " #{elem} "
+        print " #{color(elem)} "
       end
     end
     puts "\n"
@@ -72,7 +82,7 @@ class Game
     loop do
       puts 'Please choose a mark Player 1, X or O ?'
       @player1.mark = gets.chomp.upcase
-      break if @player1.mark == 'X'|| @player1.mark == 'O'
+      break if @player1.mark == X || @player1.mark == O
     end
     @player2 = Player.new('Player 2', @player1.mark == X ? O : X)
     puts "\nPlayer 1's mark is #{@player1.mark}, Player 2's mark is #{@player2.mark}.\n\n"
@@ -89,12 +99,62 @@ class Game
     @board.draw_board
   end
 
+  def draw?
+    !(@board.board_arr.any? { |n| n.is_a? Integer }) && !endgame?(@board.board_arr)
+  end
+
+  def play
+    loop do
+      box_selection
+      break if endgame?(@board.board_arr) || draw?
+    end
+  end
+
+  def draw_text
+    puts "\n"
+    puts '*************************************************'
+    puts '****************    GAME OVER    ****************'
+    puts '*************************************************'
+    puts "****************  It's a Draw!  *****************"
+    puts '*************************************************'
+  end
+
+  def other_player
+    @current_player == @player1 ? @player2 : @player1
+  end
+
+  def winner_text
+    puts "\n"
+    puts '*************************************************'
+    puts '**************** CONGRATULATIONS ****************'
+    puts '*************************************************'
+    puts "**************** #{other_player.name} Wins! *****************"
+    puts '*************************************************'
+  end
+
+  def ending_text
+    draw? ? draw_text : winner_text
+  end
+
+  def play_again? 
+    loop do
+      puts 'Play Again? (Y/N)'
+      @answer = gets.chomp.upcase
+      break if @answer == 'Y' || @answer == 'N'
+    end
+
+    Game.new if @answer == 'Y'
+    puts 'Thanks for Playing!' if @answer == 'N'
+  end
+
   def start_game
     greeting
     set_mark
     @board.draw_board
     @current_player = @player1
-    box_selection
+    play
+    ending_text
+    play_again?
   end
 end
 
@@ -108,5 +168,4 @@ class Player
   end
 end
 
-b = Game.new
-
+Game.new
