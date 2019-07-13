@@ -89,7 +89,10 @@ end
 
 # Breaking code made by computer
 class Codebreaker
+  attr_reader :code, :guess
+
   def initialize
+    @guesses_left = 5
     play
   end
 
@@ -104,9 +107,54 @@ class Codebreaker
     puts @code.join('')
   end
 
+  def valid_guess?
+    @guess.length == 4 &&
+      @guess.scan(/\D/).empty? &&
+      @guess.each_char { |e| return false unless (1..6).member?(e.to_i) }
+  end
+
+  def code_guess
+    loop do
+      puts 'Enter 4 numbers within the range of 1 to 6 to make the secret code!'
+      @guess = gets.chomp
+      break if valid_guess?
+    end
+  end
+
+  def guesses_remaining
+    puts @guesses_left == 1 ? "\nYou have #{@guesses_left} guess remaining." : "\nYou have #{@guesses_left} guesses remaining."
+    @guesses_left -= 1
+  end
+
+  def display_guess
+    @colored = []
+    @count = 0
+    @guess.each_char do |char|
+      if char.to_i == @code[@count]
+        @colored.push(char.green)
+      elsif !@code.include? char.to_i
+        @colored.push(char.red)
+      else
+        @colored.push(char)
+      end
+      @count += 1
+    end
+    @colored.join('')
+  end
+
+  def ask_guess
+    loop do
+      guesses_remaining
+      code_guess
+      puts display_guess
+      break if @guess.to_i == @code.join('') || @guesses_left == 0
+    end
+  end
+
   def play
     create_code
-    display_code
+    puts @code.join('')
+    ask_guess
   end
 end
 
@@ -114,6 +162,5 @@ end
 class Codemaker
   def initialize; end
 end
-
 
 Game.new
