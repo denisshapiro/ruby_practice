@@ -79,11 +79,23 @@ class Game
     @role == 1 ? Codemaker.new : Codebreaker.new
   end
 
+  def play_again?
+    loop do
+      puts 'Play Again? (Y/N)'
+      @answer = gets.chomp.upcase
+      break if @answer == 'Y' || @answer == 'N'
+    end
+
+    Game.new if @answer == 'Y'
+    puts 'Thanks for Playing!' if @answer == 'N'
+  end
+
   def start_game
     display_welcome
     choose_role
     display_instructions
     init_role
+    play_again?
   end
 end
 
@@ -115,7 +127,7 @@ class Codebreaker
 
   def code_guess
     loop do
-      puts 'Enter 4 numbers within the range of 1 to 6 to make the secret code!'
+      puts 'Enter 4 numbers within the range of 1 to 6 to guess the secret code!'
       @guess = gets.chomp
       break if valid_guess?
     end
@@ -147,20 +159,114 @@ class Codebreaker
       guesses_remaining
       code_guess
       puts display_guess
-      break if @guess.to_i == @code.join('') || @guesses_left == 0
+      break if @guess.to_i == @code.join('').to_i || @guesses_left == 0
+    end
+  end
+
+  def conclude
+    if @guess.to_i == @code.join('').to_i
+      puts "\nThe code breaker has cracked the secret code! The code breaker wins!"
+    else
+      puts "\nThe secret code was #{@code.join('')}. The code maker wins!"
     end
   end
 
   def play
     create_code
-    puts @code.join('')
     ask_guess
+    conclude
   end
 end
 
 # Create code to be broken by computer
 class Codemaker
-  def initialize; end
+  def initialize
+    @guesses_left = 5
+    @guess = %w[1 1 2 2]
+    @discarded_nums = []
+    @reuse_nums = Hash.new { |h, k| h[k] = [] }
+    play
+  end
+
+  def valid_code?
+    @code.length == 4 &&
+      @code.scan(/\D/).empty? &&
+      @code.each_char { |e| return false unless (1..6).member?(e.to_i) }
+  end
+
+  def input_code
+    loop do
+      puts "\nEnter 4 numbers within the range of 1 to 6 to make the secret code!"
+      @code = gets.chomp
+      break if valid_code?
+    end
+  end
+
+  def keep_pos?(index)
+    @guess[index] == @code[index]
+  end
+
+  def proper_random(index)
+    num = 0
+    loop do
+      num = rand(1..6)
+      break unless @discarded_nums.include?(num) || @reuse_nums[index].include?(num)
+    end
+    num.to_s
+  end
+
+  def code_guess
+    puts 'Computer enters 4 numbers within the range of 1 to 6 to guess the secret code!'
+    @guess.each_with_index do |_num, index|
+      @guess[index] = proper_random(index) unless keep_pos?(index)
+    end
+  end
+
+  def guesses_remaining
+    puts @guesses_left == 1 ? "\nComputer has #{@guesses_left} guess remaining." : "\nComputer has #{@guesses_left} guesses remaining."
+    @guesses_left -= 1
+  end
+
+  def display_guess
+    @colored = []
+    @count = 0
+    @guess.each do |char|
+      if char == @code[@count]
+        @colored.push(char.green)
+      elsif !@code.include? char
+        @colored.push(char.red)
+        @discarded_nums.push(char.to_i)
+      else
+        @colored.push(char)
+        @reuse_nums[@count].push(char.to_i)
+      end
+      @count += 1
+    end
+    @colored.join('')
+  end
+
+  def ask_guess
+    loop do
+      guesses_remaining
+      code_guess if @guesses_left < 4
+      puts display_guess
+      break if @guess.join('') == @code || @guesses_left == 0
+    end
+  end
+
+  def conclude
+    if @guess.join('') == @code
+      puts "\nThe code breaker has cracked the secret code! The code breaker wins!"
+    else
+      puts "\nThe secret code was #{@code}. The code maker wins!"
+    end
+  end
+
+  def play
+    input_code
+    ask_guess
+    conclude
+  end
 end
 
 Game.new
