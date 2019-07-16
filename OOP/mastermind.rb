@@ -182,7 +182,7 @@ end
 class Codemaker
   def initialize
     @guesses_left = 5
-    @guess = %w[1 1 2 2]
+    @guess = %w[1 2 3 4]
     @discarded_nums = []
     @reuse_nums = Hash.new { |h, k| h[k] = [] }
     play
