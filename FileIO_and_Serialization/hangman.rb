@@ -60,13 +60,58 @@ end
 
 # Game class to setup hangman
 class Game
-  def initialize
+  def initialize(filename = nil)
     @word = Dictionary.choose_word
     @guessed_wrong_letters = []
     @guessed_right_letters = Array.new(@word.length, '_ ')
-    @guesses_taken = 0
+    @wrong_guesses_taken = 0
+    @hangman_display = nil
+    @draw = nil
+    @file_name = filename
     load_prompt
     @guess = nil
+  end
+
+  def save_game
+    game_data = {
+      draw: @draw,
+      guessed_wrong_letters: @guessed_wrong_letters,
+      wrong_guesses_taken: @wrong_guesses_taken,
+      word: @word,
+      guess: @guess,
+      guessed_right_letters: @guessed_right_letters
+    }
+
+    Dir.mkdir('saves') unless Dir.exist? 'saves'
+
+    puts 'WARNING! If the filename already exist the data on that file will be overwritten!'
+    print 'Enter a filename for your save: '
+    filename = gets.chomp
+
+    File.open("saves/#{filename}.yaml", 'w') do |file|
+      file.puts game_data.to_yaml
+    end
+
+    puts 'Your progress has been saved!'
+  end
+
+  def load_game
+    filename = nil
+    loop do
+      print 'Please enter an existing filename: '
+      filename = gets.chomp
+      break if File.exist? "saves/#{filename}.yaml"
+    end
+
+    game_data = YAML.load_file("saves/#{filename}.yaml")
+
+    @draw = game_data[:draw]
+    @guessed_wrong_letters = game_data[:guessed_wrong_letters]
+    @wrong_guesses_taken = game_data[:wrong_guesses_taken]
+    @word = game_data[:word]
+    @guess = game_data[:guess]
+    @guessed_right_letters = game_data[:guessed_right_letters]
+    play
   end
 
   def load_prompt
@@ -104,27 +149,80 @@ class Game
     puts '3. When you guessed all the correct letters to the secret word'
     puts 'or when you are out of chances, it will be game over.'
     puts '4. Any time during the game, if you would like to save'
-    puts 'your progress, type "save--" without the quotes'
+    puts "your progress, type 'save' without the quotes\n\n"
   end
 
   def secret_word
-    puts "\nSecret Word: #{@guessed_right_letters.join()}"
+    puts "Secret Word: #{@guessed_right_letters.join}"
   end
 
   def guess_prompt
     loop do
-      print "Please enter your guess: "
+      print "\n\nPlease enter your guess: "
       @guess = gets.chomp.downcase
-      break if @guess.match(/[a-z]/) && @guess.length == 1
+      save_game if @guess == 'save'
+      break if @guess.match(/[a-z]/) && @guess.length == 1 && !(@guessed_wrong_letters.include? @guess)
+    end
+  end
+
+  def wrong_remaining
+    puts "You have #{8 - @wrong_guesses_taken} wrong guesses left"
+  end
+
+  def check_guess
+    if @word.include? @guess
+      @guessed_right_letters.each_with_index do |_pos, index|
+        @guessed_right_letters[index] = @guess.green + ' ' if @word[index] == @guess
+      end
+    else
+      @guessed_wrong_letters.push(@guess)
+      @wrong_guesses_taken += 1
+      @draw = DrawGame.draw_man(@wrong_guesses_taken)
+      wrong_remaining
+    end
+    puts "You tried: #{@guessed_wrong_letters}"
+  end
+
+  def endgame?
+    !(@guessed_right_letters.include? '_ ') || (@wrong_guesses_taken == 8)
+  end
+
+  def end_text
+    if @wrong_guesses_taken == 8
+      puts "\nGame Over! You have ran out of guesses"
+      puts "The secret word was #{@word.blue}"
+    else
+      puts "\nCongratulations you won!"
+    end
+  end
+
+  def play_again?
+    loop do
+      puts 'Play Again? (Y/N)'
+      @answer = gets.chomp.upcase
+      break if @answer == 'Y' || @answer == 'N'
+    end
+
+    Game.new if @answer == 'Y'
+    puts 'Thanks for Playing!' if @answer == 'N'
+  end
+
+  def ask_guesses
+    loop do
+      guess_prompt
+      check_guess
+      secret_word
+      break if endgame?
     end
   end
 
   def play
     welcome_message
     secret_word
-    guess_prompt
+    ask_guesses
+    end_text
+    play_again?
   end
 end
 
 Game.new
-

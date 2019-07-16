@@ -1,0 +1,19 @@
+---
+:draw: 
+:guessed_wrong_letters:
+- r
+- y
+- l
+- w
+:wrong_guesses_taken: 4
+:word: obeisant
+:guess: save
+:guessed_right_letters:
+- '_ '
+- '_ '
+- "\e[0;32;49me\e[0m "
+- '_ '
+- '_ '
+- "\e[0;32;49ma\e[0m "
+- "\e[0;32;49mn\e[0m "
+- '_ '

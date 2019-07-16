@@ -1,0 +1,18 @@
+---
+:draw: 
+:guessed_wrong_letters:
+- h
+- d
+- p
+:wrong_guesses_taken: 3
+:word: bayberry
+:guess: save
+:guessed_right_letters:
+- '_ '
+- '_ '
+- '_ '
+- '_ '
+- "\e[0;32;49me\e[0m "
+- "\e[0;32;49mr\e[0m "
+- "\e[0;32;49mr\e[0m "
+- '_ '
