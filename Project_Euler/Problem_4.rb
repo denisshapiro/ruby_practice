@@ -2,9 +2,9 @@ def largest_palindrome_prod(num1 = 999, num2 = 999, largest_so_far = 0)
   prod = num1 * num2
   largest_so_far = prod if prod > largest_so_far && check_pal(prod)
 
-  if num2 == 100
+  if num2 == 910
     return largest_so_far
-  elsif num1 == 100
+  elsif num1 == 910
     largest_palindrome_prod(num1 = 999, num2 -= 1, largest_so_far)
   else
     largest_palindrome_prod(num1 -= 1, num2, largest_so_far)
