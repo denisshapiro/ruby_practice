@@ -52,10 +52,10 @@ class BST
 
     until @current.value == value
       return nil if @queue.empty?
-      p @current.value
       @current = @queue.pop
-      @queue.push(@current.left) unless @current.left.nil?
+      p @current.value
       @queue.push(@current.right) unless @current.right.nil?
+      @queue.push(@current.left) unless @current.left.nil?
     end
 
     return "The node is #{@current}" if @current.value == value
@@ -76,5 +76,5 @@ bst = BST.new([5, 7, 3, 1, 2, 12, 4, 2, 14])
 
 #p bst.dfs_rec(52)
 
-p bst.depth_first_search(12)
+p bst.depth_first_search(2)
 
