@@ -39,6 +39,7 @@ class BST
       return nil if @queue.empty?
 
       @current = @queue.shift
+      #p @current.value  
       @queue.push(@current.left) unless @current.left.nil?
       @queue.push(@current.right) unless @current.right.nil?
     end
@@ -53,7 +54,7 @@ class BST
     until @current.value == value
       return nil if @queue.empty?
       @current = @queue.pop
-      p @current.value
+      #p @current.value
       @queue.push(@current.right) unless @current.right.nil?
       @queue.push(@current.left) unless @current.left.nil?
     end
@@ -65,16 +66,19 @@ class BST
     return nil if root.nil?
     return "The node is #{root}" if root.value == value
 
-    dfs_rec(value, root.left)
-    dfs_rec(value, root.right)
+    unless dfs_rec(value, root.left).nil?
+      dfs_rec(value, root.left)
+    else
+      dfs_rec(value, root.right)
+    end
   end
 end
 
-bst = BST.new([5, 7, 3, 1, 2, 12, 4, 2, 14])
+bst = BST.new([1, 7, 4, 23, 8, 9, 4, 3, 5, 7, 9, 67, 6345, 324])
 
-#p bst.breadth_first_search(104)
+p bst.breadth_first_search(324)
 
-#p bst.dfs_rec(52)
+p bst.dfs_rec(6345)
 
-p bst.depth_first_search(2)
+p bst.depth_first_search(324)
 
