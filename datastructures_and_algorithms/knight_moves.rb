@@ -1,4 +1,10 @@
+# This programs uses the Breadth First Search algorithm on a Directed Graph to
+# display the shortest path between a user inputted starting and ending position
+# for a Knight on a Chessboard
+
+# gem install colorize
 require 'colorize'
+
 # class to create game board
 class Board
   attr_accessor :squares
@@ -9,8 +15,6 @@ class Board
     @vertical = [8, 7, 6, 5, 4, 3, 2, 1]
     @horizontal =  '    a   b   c   d   e   f   g   h'
     @row_separator = '    +---+---+---+---+---+---+---+---+'
-    puts "sarting x is #{starting_x}"
-    puts "sarting y is #{starting_y}"
     starting_y = 7 - ((starting_y + 8) % 8)
     @squares[starting_y][starting_x] = @knight_piece
   end
@@ -18,7 +22,6 @@ class Board
   def change(x_coord, y_coord, char)
     y_coord = 7 - ((y_coord + 8) % 8)
     @squares[y_coord][x_coord] = char
-    display_board
   end
 
   def print_row(row_arr)
@@ -41,6 +44,8 @@ end
 
 #class for calculating knight moves
 class KnightMove
+  attr_accessor :board, :starting, :ending
+
   def initialize
     @starting = nil
     @ending = nil
@@ -59,7 +64,6 @@ class KnightMove
 
   def init_board(starting_x, starting_y)
     @board = Board.new(starting_x, starting_y)
-    @board.display_board
   end
 
   def input_positions
@@ -88,7 +92,6 @@ class KnightMove
       y_coord = @y_curr + @y_moves[index]
       @possible.push([x_coord, y_coord]) if on_board?(x_coord, y_coord)
     end
-    p @possible
     @possible
   end
 
@@ -99,24 +102,78 @@ class KnightMove
   def run
     input_positions
     init_board(@starting[0], @starting[1])
-    possible_from_current(@starting)
   end
 end
 
-Node = Struct.new(:pos, :children)
+Node = Struct.new(:value, :parent, :children)
 
 # Class to implement BFS and search for shortest path to destination
 class BST
-  def initialize; end
+  attr_accessor :visited, :tree
 
-  def new_node(pos)
-    @temp = Node.new(pos, nil)
-    @temp
+  def initialize
+    @knight = KnightMove.new
+    @starting = @knight.starting
+    @ending = @knight.ending
+    @tree = build_tree
+    @final_node = breadth_first_search
+    @path = path
+    @knight.board.display_board
   end
 
-  def fact(n)
-    (1..n).inject(:*) || 1
+  def already_visited?(pos)
+    @visited.include?(pos)
+  end
+
+  def build_tree
+    @head = Node.new(@starting, nil, [])
+    @visited = [@head.value]
+    @nodes_in_curr_level = [@head]
+    @nodes_in_next_level = []
+
+    until @visited.include?(@ending)
+      @nodes_in_curr_level.each do |node|
+        insert_children(node)
+      end
+      @nodes_in_curr_level = @nodes_in_next_level
+      @nodes_in_next_level = []
+    end
+    @head
+  end
+
+  def insert_children(node)
+    @children = @knight.possible_from_current(node.value)
+    @children.each do |pos|
+      unless already_visited?(pos)
+        @visited.push(pos)
+        @new = Node.new(pos, node, [])
+        node.children.push(@new)
+        @nodes_in_next_level.push(@new)
+      end
+    end
+  end
+
+  def breadth_first_search(value = @ending)
+    @queue = [@tree]
+    @current = @tree
+    until @current.value == value
+      @current = @queue.shift
+
+      @current.children.each do |node|
+        @queue.push(node) unless node.nil?
+      end
+    end
+    @current
+  end
+
+  def path(node = @final_node)
+    return if node.value == @starting
+
+    x_coord = node.value[0]
+    y_coord = node.value[1]
+    @knight.board.change(x_coord, y_coord, 'X'.red)
+    path(node.parent)
   end
 end
 
-KnightMove.new
+BST.new
