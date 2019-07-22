@@ -89,6 +89,7 @@ def multiply_els(arr)
     arr.my_inject(1){|memo, value| memo * value}
 end
 
+=begin
 my_array = (1..4).to_a
 
 # EACH
@@ -129,3 +130,4 @@ p my_array.my_map(proc)
 
 # INJECT
 p multiply_els([2,4,5])
+=end
